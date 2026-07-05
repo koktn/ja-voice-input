@@ -1,0 +1,25 @@
+# 専門用語辞書のサンプル
+# ~/.config/ja-voice-input/terms.yaml にコピーして社内用語を追加してください
+#
+# surface:  正しい表記(この表記に統一される)
+# readings: 音声認識が出しがちな誤変換・カタカナ表記(決定論的に置換される)
+# notes:    LLM への補足説明(任意。文脈判断の助けになる)
+
+terms:
+  - surface: "Claude Code"
+    readings: ["クロードコード", "クロード コード", "くろーどこーど"]
+    notes: "Anthropic の AI コーディングエージェント CLI"
+
+  - surface: "Ollama"
+    readings: ["オラマ", "オーラマ", "おらま"]
+    notes: "ローカル LLM 実行環境"
+
+  - surface: "リファクタリング"
+    readings: ["リファクタ リング", "リファクター"]
+
+  - surface: "プルリクエスト"
+    readings: ["プルリク", "ぷるりく"]
+    notes: "PR と略されることもある"
+
+  - surface: "デプロイ"
+    readings: ["デプロー", "でぷろい"]

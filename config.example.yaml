@@ -1,0 +1,35 @@
+# ja-voice-input 設定ファイル
+# ~/.config/ja-voice-input/config.yaml に置くと自動で読み込まれます
+
+# 音声入力を開始するグローバルホットキー(pynput 形式)
+# 録音中にもう一度押すと即座に打ち切って変換に進みます
+hotkey: "<ctrl>+<alt>+<space>"
+
+# 専門用語辞書(dict/terms.example.yaml を参考に作成)
+dictionary_path: "~/.config/ja-voice-input/terms.yaml"
+
+sounds: true          # 録音開始/終了の効果音
+notifications: true   # エラー時などの macOS 通知
+
+audio:
+  silence_duration: 1.2   # この秒数無音が続くと入力終了
+  start_timeout: 8.0      # 発話しないまま経過すると中断
+  max_duration: 90.0      # 録音の最大長(秒)
+  vad_aggressiveness: 2   # 0(緩い)〜3(厳しい)。誤って途切れる場合は下げる
+
+stt:
+  backend: whispercpp     # whispercpp | mlx (Apple Silicon は mlx + turbo が高速・高精度)
+  model: small            # whispercpp: tiny/base/small/medium
+                          # mlx: turbo / mlx-community/... の HF リポジトリ名
+  language: ja
+  n_threads: 4
+
+llm:
+  enabled: true
+  base_url: "http://localhost:11434"
+  model: "qwen2.5:3b"     # 軽量で日本語に強いモデル。gemma3:4b なども可
+  timeout: 30.0
+
+paste:
+  method: keystroke       # keystroke: Cmd+V を自動送出 / clipboard: コピーのみ
+  restore_clipboard: true # 貼り付け後に元のクリップボード内容を復元
