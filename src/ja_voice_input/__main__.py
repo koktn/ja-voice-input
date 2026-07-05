@@ -77,7 +77,7 @@ def cmd_doctor(args) -> int:
     except ImportError as e:
         extra = "whispercpp" if cfg.stt.backend == "whispercpp" else "mlx"
         check(f"STT backend: {cfg.stt.backend}", False,
-              f"pip install 'ja-voice-input[{extra}]' が必要です ({e})")
+              f"uv sync --extra {extra} が必要です ({e})")
 
     # Ollama
     if cfg.llm.enabled:

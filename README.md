@@ -15,17 +15,18 @@ macOS でローカル動作する日本語音声入力ツール。coding agent(C
 ### 1. 依存のインストール
 
 ```bash
-brew install portaudio   # sounddevice が使う
+brew install portaudio uv   # portaudio は sounddevice が使う
 git clone https://github.com/koktn/ja-voice-input.git
 cd ja-voice-input
-python3 -m venv .venv && source .venv/bin/activate
 
 # Apple Silicon(推奨: 高速)
-pip install -e '.[mlx,vad]'
+uv sync --extra mlx --extra vad
 
 # Intel Mac / 汎用
-pip install -e '.[whispercpp,vad]'
+uv sync --extra whispercpp --extra vad
 ```
+
+`uv sync` が Python の用意から仮想環境の作成・依存のインストールまで行います。以降のコマンドは `uv run` 経由で実行します(venv の activate は不要)。
 
 ### 2. Ollama の準備
 
@@ -64,14 +65,14 @@ stt:
 ### 5. 動作確認
 
 ```bash
-ja-voice-input doctor   # 環境チェック
-ja-voice-input once     # 1回だけ録音→認識→整形して表示
+uv run ja-voice-input doctor   # 環境チェック
+uv run ja-voice-input once     # 1回だけ録音→認識→整形して表示
 ```
 
 ## 使い方
 
 ```bash
-ja-voice-input          # 常駐開始
+uv run ja-voice-input          # 常駐開始
 ```
 
 1. ターミナルなどテキスト入力欄にカーソルを置く
@@ -106,8 +107,8 @@ terms:
 ## 開発
 
 ```bash
-pip install -e '.[dev]'
-pytest
+uv sync --extra dev
+uv run pytest
 ```
 
 音声・macOS 依存を切り離してあるため、ロジック部分(VAD 状態機械・辞書・整形・設定)のテストはどの OS でも走ります。
