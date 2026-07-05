@@ -27,7 +27,7 @@ stt:
 llm:
   enabled: true
   base_url: "http://localhost:11434"
-  model: "qwen2.5:3b"     # 軽量で日本語に強いモデル。gemma3:4b なども可
+  model: "gemma4:e4b"     # 軽量で日本語に強い(実効4B、Q4で約4.5GB)。qwen2.5:3b なども可
   timeout: 30.0
 
 paste:

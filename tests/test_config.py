@@ -13,7 +13,7 @@ class TestLoadConfig:
         cfg = load_config()
         assert isinstance(cfg, Config)
         assert cfg.stt.backend == "whispercpp"
-        assert cfg.llm.model == "qwen2.5:3b"
+        assert cfg.llm.model == "gemma4:e4b"
         assert cfg.audio.silence_duration == 1.2
 
     def test_partial_override(self, tmp_path):

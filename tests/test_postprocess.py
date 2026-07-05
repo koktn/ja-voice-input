@@ -56,7 +56,7 @@ class TestPostProcessor:
         url = post.call_args.args[0]
         payload = post.call_args.kwargs["json"]
         assert url == "http://localhost:11434/api/chat"
-        assert payload["model"] == "qwen2.5:3b"
+        assert payload["model"] == "gemma4:e4b"
         assert payload["stream"] is False
         assert payload["messages"][1]["content"] == "生テキスト"
 

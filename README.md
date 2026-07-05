@@ -32,7 +32,7 @@ pip install -e '.[whispercpp,vad]'
 ```bash
 brew install ollama
 ollama serve &          # 常駐させる場合は brew services start ollama
-ollama pull qwen2.5:3b  # 軽量で日本語に強い。gemma3:4b なども可
+ollama pull gemma4:e4b  # 軽量で日本語に強い(実効4B)。qwen2.5:3b なども可
 ```
 
 ### 3. 設定と辞書
@@ -98,10 +98,10 @@ terms:
 
 | 構成 | 5秒の発話の処理時間の目安 |
 |---|---|
-| mlx + turbo + qwen2.5:3b (M2 以降) | 1〜2 秒 |
-| whispercpp small + qwen2.5:3b | 2〜4 秒 |
+| mlx + turbo + gemma4:e4b (M2 以降) | 1〜2 秒 |
+| whispercpp small + gemma4:e4b | 2〜4 秒 |
 
-さらに速くしたい場合: `stt.model: base`、`llm.model: qwen2.5:1.5b`、または `llm.enabled: false`(辞書置換+簡易フィラー除去のみ)。
+さらに速くしたい場合: `stt.model: base`、`llm.model: qwen2.5:1.5b`、または `llm.enabled: false`(辞書置換+簡易フィラー除去のみ)。なお `gemma4:e2b` はほぼ英語専用のため日本語整形には不向きです。
 
 ## 開発
 
