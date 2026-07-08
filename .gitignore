@@ -7,4 +7,5 @@ dist/
 build/
 .pytest_cache/
 config.yaml
+terms.yaml
 .DS_Store
