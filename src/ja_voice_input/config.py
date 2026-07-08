@@ -51,7 +51,7 @@ class PasteConfig:
 
 @dataclass
 class Config:
-    hotkey: str = "<ctrl>+<alt>+<space>"
+    hotkey: str = "double:cmd_r"  # 右 Cmd 2回。pynput 形式 "<ctrl>+<alt>+<space>" も可
     dictionary_path: str = "~/.config/ja-voice-input/terms.yaml"
     sounds: bool = True
     notifications: bool = True

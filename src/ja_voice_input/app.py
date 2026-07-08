@@ -98,6 +98,28 @@ class App:
     def run(self) -> None:
         from pynput import keyboard  # macOS では入力監視権限が必要
 
+        from .hotkey import (
+            DoubleTapDetector,
+            double_tap_key_name,
+            is_double_tap_spec,
+            resolve_target_keys,
+        )
+
         log.info("hotkey: %s で音声入力を開始します(Ctrl+C で終了)", self.cfg.hotkey)
-        with keyboard.GlobalHotKeys({self.cfg.hotkey: self.on_hotkey}) as listener:
+        if not is_double_tap_spec(self.cfg.hotkey):
+            with keyboard.GlobalHotKeys({self.cfg.hotkey: self.on_hotkey}) as listener:
+                listener.join()
+            return
+
+        targets = resolve_target_keys(double_tap_key_name(self.cfg.hotkey))
+        detector = DoubleTapDetector()
+
+        def on_press(key):
+            if detector.on_press(key in targets):
+                self.on_hotkey()
+
+        def on_release(key):
+            detector.on_release(key in targets)
+
+        with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
             listener.join()

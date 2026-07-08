@@ -1,9 +1,13 @@
 # ja-voice-input 設定ファイル
 # ~/.config/ja-voice-input/config.yaml に置くと自動で読み込まれます
 
-# 音声入力を開始するグローバルホットキー(pynput 形式)
+# 音声入力を開始するグローバルホットキー
 # 録音中にもう一度押すと即座に打ち切って変換に進みます
-hotkey: "<ctrl>+<alt>+<space>"
+#
+# - "double:cmd_r"           右 Command 2回(既定。他アプリと被らずおすすめ)
+# - "double:cmd"             左右どちらかの Command 2回
+# - "<ctrl>+<alt>+<space>"   pynput のコンビネーション形式も使用可
+hotkey: "double:cmd_r"
 
 # 専門用語辞書(dict/terms.example.yaml を参考に作成)
 dictionary_path: "~/.config/ja-voice-input/terms.yaml"
