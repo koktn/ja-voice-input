@@ -4,10 +4,10 @@
 # 音声入力を開始するグローバルホットキー
 # 録音中にもう一度押すと即座に打ち切って変換に進みます
 #
-# - "double:cmd_r"           右 Command 2回(既定。他アプリと被らずおすすめ)
-# - "double:cmd"             左右どちらかの Command 2回
+# - "double:cmd"             左右どちらかの Command 2回(既定)
+# - "double:cmd_r"           右 Command 2回のみ(誤発火や他アプリとの被りが気になる場合)
 # - "<ctrl>+<alt>+<space>"   pynput のコンビネーション形式も使用可
-hotkey: "double:cmd_r"
+hotkey: "double:cmd"
 
 # 専門用語辞書(dict/terms.example.yaml を参考に作成)
 dictionary_path: "~/.config/ja-voice-input/terms.yaml"
