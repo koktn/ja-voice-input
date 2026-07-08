@@ -10,7 +10,9 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = [
-    "numpy>=1.24",
+    # numpy<2.5: mlx-whisper 経由の numba が numpy<2.5 を要求するため上限を切る。
+    # 外すと resolver が古い numba(Python<3.10 のみ対応)まで遡って sync が失敗する。
+    "numpy>=1.24,<2.5",
     "sounddevice>=0.4.6",
     "pynput>=1.7.6",
     "PyYAML>=6.0",

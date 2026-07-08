@@ -26,7 +26,7 @@ uv sync --extra mlx --extra vad
 uv sync --extra whispercpp --extra vad
 ```
 
-`uv sync` が Python の用意から仮想環境の作成・依存のインストールまで行います。以降のコマンドは `uv run` 経由で実行します(venv の activate は不要)。
+`uv sync` が Python の用意から仮想環境の作成・依存のインストールまで行います。以降のコマンドは `uv run` 経由で実行します(venv の activate は不要)。Python のバージョンは `.python-version`(3.12)で固定してあり、未導入の場合は `uv` が自動でインストールします。
 
 ### 2. Ollama の準備
 
