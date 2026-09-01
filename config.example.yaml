@@ -16,10 +16,12 @@ sounds: true          # 録音開始/終了の効果音
 notifications: true   # エラー時などの macOS 通知
 
 audio:
-  silence_duration: 1.2   # この秒数無音が続くと入力終了
+  silence_duration: 0.8   # この秒数無音が続くと入力終了
   start_timeout: 8.0      # 発話しないまま経過すると中断
   max_duration: 90.0      # 録音の最大長(秒)
   vad_aggressiveness: 2   # 0(緩い)〜3(厳しい)。誤って途切れる場合は下げる
+  pre_roll: 0.3           # 発話開始前に残す秒数
+  tail_padding: 0.15      # 無音判定後、認識用に語尾へ残す秒数
 
 stt:
   backend: whispercpp     # whispercpp | mlx (Apple Silicon は mlx + turbo が高速・高精度)
@@ -27,13 +29,23 @@ stt:
                           # mlx: turbo / mlx-community/... の HF リポジトリ名
   language: ja
   n_threads: 4
+  warmup: true            # 常駐開始時にモデルをバックグラウンドでロード
 
 llm:
   enabled: true
   base_url: "http://localhost:11434"
   model: "gemma4:e4b"     # 軽量で日本語に強い(実効4B、Q4で約4.5GB)。qwen2.5:3b なども可
-  timeout: 30.0
+  timeout: 10.0          # ローカルLLMの応答待ち上限
+  connect_timeout: 0.5
+  warmup: true
+  keep_alive: "30m"
+  failure_cooldown: 60.0  # 障害後、この秒数はLLMを呼ばず簡易整形へフォールバック
+  mode: always            # always | auto（フィラーがある場合だけLLMを使う）
 
 paste:
   method: keystroke       # keystroke: Cmd+V を自動送出 / clipboard: コピーのみ
   restore_clipboard: true # 貼り付け後に元のクリップボード内容を復元
+  cancel_on_focus_change: true # 録音開始後に入力先が変わったら貼り付けを中止
+  keystroke_delay: 0.15
+  restore_delay: 0.3
+  subprocess_timeout: 3.0

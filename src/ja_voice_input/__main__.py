@@ -10,7 +10,7 @@ import argparse
 import logging
 import sys
 
-from .config import load_config
+from .config import ConfigError, load_config
 
 
 def cmd_run(args) -> int:
@@ -22,8 +22,16 @@ def cmd_run(args) -> int:
 
 def cmd_once(args) -> int:
     from .app import App
+    from .paste import FocusTarget, PasteResult, paste_text
 
     app = App(load_config(args.config))
+    target = (
+        FocusTarget.capture()
+        if args.paste
+        and app.cfg.paste.method == "keystroke"
+        and app.cfg.paste.cancel_on_focus_change
+        else None
+    )
     print("録音中... 話し終えて無音になると自動で止まります", file=sys.stderr)
     text = app.process_once()
     if text is None:
@@ -31,9 +39,9 @@ def cmd_once(args) -> int:
         return 1
     print(text)
     if args.paste:
-        from .paste import paste_text
-
-        paste_text(text, app.cfg.paste)
+        result = paste_text(text, app.cfg.paste, target)
+        if result is PasteResult.TARGET_CHANGED:
+            print("入力先が変わったため貼り付けを中止しました", file=sys.stderr)
     return 0
 
 
@@ -133,6 +141,9 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_run(args)
     except KeyboardInterrupt:
         return 130
+    except ConfigError as e:
+        print(f"設定エラー: {e}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

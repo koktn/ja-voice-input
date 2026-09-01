@@ -16,14 +16,29 @@ class WhisperCppBackend(SttBackend):
         from pywhispercpp.model import Model  # 遅延 import(extras 依存)
 
         self.cfg = cfg
-        log.info("loading whisper.cpp model: %s", cfg.model)
-        kwargs = {"n_threads": cfg.n_threads}
-        if cfg.initial_prompt:
-            kwargs["initial_prompt"] = cfg.initial_prompt
-        self.model = Model(cfg.model, language=cfg.language, print_progress=False, **kwargs)
+        self._model_class = Model
+        self.model = None
+
+    def _load_model(self):
+        if self.model is not None:
+            return self.model
+        log.info("loading whisper.cpp model: %s", self.cfg.model)
+        kwargs = {"n_threads": self.cfg.n_threads}
+        if self.cfg.initial_prompt:
+            kwargs["initial_prompt"] = self.cfg.initial_prompt
+        self.model = self._model_class(
+            self.cfg.model,
+            language=self.cfg.language,
+            print_progress=False,
+            **kwargs,
+        )
+        return self.model
 
     def transcribe(self, audio: np.ndarray, sample_rate: int) -> str:
         if sample_rate != 16000:
             raise ValueError("whisper.cpp requires 16kHz audio")
-        segments = self.model.transcribe(audio)
+        segments = self._load_model().transcribe(audio)
         return "".join(seg.text for seg in segments).strip()
+
+    def warmup(self) -> None:
+        self._load_model()

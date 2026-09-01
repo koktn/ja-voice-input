@@ -1,6 +1,6 @@
 import pytest
 
-from ja_voice_input.config import Config, load_config
+from ja_voice_input.config import Config, ConfigError, load_config
 
 
 class TestLoadConfig:
@@ -14,7 +14,7 @@ class TestLoadConfig:
         assert isinstance(cfg, Config)
         assert cfg.stt.backend == "whispercpp"
         assert cfg.llm.model == "gemma4:e4b"
-        assert cfg.audio.silence_duration == 1.2
+        assert cfg.audio.silence_duration == 0.8
 
     def test_partial_override(self, tmp_path):
         p = tmp_path / "config.yaml"
@@ -35,12 +35,24 @@ class TestLoadConfig:
         assert cfg.audio.silence_duration == 0.8
         assert cfg.llm.enabled is True
 
-    def test_unknown_keys_ignored(self, tmp_path):
+    def test_unknown_keys_rejected(self, tmp_path):
         p = tmp_path / "config.yaml"
         p.write_text("stt: {backend: whispercpp, bogus_key: 1}\nfuture_option: x\n",
                      encoding="utf-8")
-        cfg = load_config(p)
-        assert cfg.stt.backend == "whispercpp"
+        with pytest.raises(ConfigError, match="bogus_key"):
+            load_config(p)
+
+    def test_invalid_audio_value_rejected(self, tmp_path):
+        p = tmp_path / "config.yaml"
+        p.write_text("audio: {frame_ms: 25}\n", encoding="utf-8")
+        with pytest.raises(ConfigError, match="frame_ms"):
+            load_config(p)
+
+    def test_section_must_be_mapping(self, tmp_path):
+        p = tmp_path / "config.yaml"
+        p.write_text("paste: invalid\n", encoding="utf-8")
+        with pytest.raises(ConfigError, match="paste"):
+            load_config(p)
 
     def test_explicit_missing_path_raises(self, tmp_path):
         with pytest.raises(FileNotFoundError):

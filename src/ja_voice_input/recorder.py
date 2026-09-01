@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import queue
 import threading
+from collections import deque
 
 import numpy as np
 import sounddevice as sd
@@ -38,6 +39,8 @@ class Recorder:
             cfg.frame_ms, cfg.silence_duration, cfg.start_timeout, cfg.max_duration
         )
         chunks: list[np.ndarray] = []
+        pre_roll_frames = max(0, round(cfg.pre_roll * 1000 / cfg.frame_ms))
+        pending: deque[np.ndarray] = deque(maxlen=pre_roll_frames)
 
         with sd.InputStream(
             samplerate=cfg.sample_rate,
@@ -53,8 +56,17 @@ class Recorder:
                     frame = frames_q.get(timeout=0.5)
                 except queue.Empty:
                     continue
-                chunks.append(frame)
-                state = tracker.feed(self.detector.is_speech(frame))
+                is_speech = self.detector.is_speech(frame)
+                was_started = tracker.speech_started
+                state = tracker.feed(is_speech)
+                if not was_started and is_speech:
+                    chunks.extend(pending)
+                    pending.clear()
+                    chunks.append(frame)
+                elif tracker.speech_started:
+                    chunks.append(frame)
+                elif pre_roll_frames:
+                    pending.append(frame)
                 if state == SilenceTracker.TIMEOUT:
                     log.info("no speech detected, aborting")
                     return None
@@ -63,6 +75,15 @@ class Recorder:
 
         if not chunks or not tracker.speech_started:
             return None
+        # 終了判定に使った長い無音は認識に不要。語尾保護分だけ残す。
+        trailing_frames = round(tracker.trailing_silence * 1000 / cfg.frame_ms)
+        tail_frames = round(cfg.tail_padding * 1000 / cfg.frame_ms)
+        trim_frames = max(0, trailing_frames - tail_frames)
+        if trim_frames:
+            chunks = chunks[:-trim_frames]
+        if not chunks:
+            return None
         audio = np.concatenate(chunks).astype(np.float32) / 32768.0
-        log.info("recorded %.1fs of audio", len(audio) / cfg.sample_rate)
+        log.info("audio prepared: %.2fs (trimmed %.2fs trailing silence)",
+                 len(audio) / cfg.sample_rate, trim_frames * cfg.frame_ms / 1000)
         return audio

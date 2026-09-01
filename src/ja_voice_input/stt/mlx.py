@@ -41,3 +41,14 @@ class MlxWhisperBackend(SttBackend):
             **kwargs,
         )
         return str(result.get("text", "")).strip()
+
+    def warmup(self) -> None:
+        # mlx-whisper は transcribe 初回呼び出し時にモデルをロードする。
+        self._mlx_whisper.transcribe(
+            np.zeros(1600, dtype=np.float32),
+            path_or_hf_repo=self.repo,
+            language=self.cfg.language,
+            fp16=True,
+            temperature=0.0,
+            condition_on_previous_text=False,
+        )

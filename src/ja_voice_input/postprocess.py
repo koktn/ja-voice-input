@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
+import time
 
 import requests
 
@@ -46,13 +48,19 @@ class PostProcessor:
         self.system_prompt = SYSTEM_PROMPT.format(
             dictionary=("\n" + dict_section) if dict_section else ""
         )
+        self._session = requests.Session()
+        self._failure_lock = threading.Lock()
+        self._disabled_until = 0.0
 
     def process(self, text: str) -> str:
         if not text.strip():
             return ""
         # 決定論的な辞書置換を先に当てる(LLM に正しい表記を見せる)
         text = self.dictionary.apply(text)
-        if self.cfg.enabled:
+        should_refine = self.cfg.enabled and (
+            self.cfg.mode == "always" or FILLER_PATTERN.search(text) is not None
+        )
+        if should_refine:
             refined = self._llm_refine(text)
             if refined is not None:
                 # LLM 出力にも辞書を再適用(取りこぼしの保険)
@@ -61,8 +69,12 @@ class PostProcessor:
         return self.dictionary.apply(basic_cleanup(text))
 
     def _llm_refine(self, text: str) -> str | None:
+        with self._failure_lock:
+            if time.monotonic() < self._disabled_until:
+                log.debug("Ollama circuit breaker is open")
+                return None
         try:
-            resp = requests.post(
+            resp = self._session.post(
                 f"{self.cfg.base_url.rstrip('/')}/api/chat",
                 json={
                     "model": self.cfg.model,
@@ -72,8 +84,9 @@ class PostProcessor:
                     ],
                     "stream": False,
                     "options": {"temperature": self.cfg.temperature},
+                    "keep_alive": self.cfg.keep_alive,
                 },
-                timeout=self.cfg.timeout,
+                timeout=(self.cfg.connect_timeout, self.cfg.timeout),
             )
             resp.raise_for_status()
             content = resp.json().get("message", {}).get("content", "")
@@ -81,4 +94,25 @@ class PostProcessor:
             return content or None
         except (requests.RequestException, ValueError) as e:
             log.warning("ollama request failed: %s", e)
+            with self._failure_lock:
+                self._disabled_until = time.monotonic() + self.cfg.failure_cooldown
             return None
+
+    def warmup(self) -> None:
+        """空プロンプトでモデルをロードする。失敗しても通常処理は無効化しない。"""
+        if not self.cfg.enabled or not self.cfg.warmup:
+            return
+        try:
+            resp = self._session.post(
+                f"{self.cfg.base_url.rstrip('/')}/api/generate",
+                json={
+                    "model": self.cfg.model,
+                    "prompt": "",
+                    "stream": False,
+                    "keep_alive": self.cfg.keep_alive,
+                },
+                timeout=(self.cfg.connect_timeout, self.cfg.timeout),
+            )
+            resp.raise_for_status()
+        except requests.RequestException as e:
+            log.warning("Ollama warm-up failed: %s", e)

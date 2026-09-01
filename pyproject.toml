@@ -17,6 +17,8 @@ dependencies = [
     "pynput>=1.7.6",
     "PyYAML>=6.0",
     "requests>=2.31",
+    "pyobjc-framework-ApplicationServices>=10; sys_platform == 'darwin'",
+    "pyobjc-framework-Cocoa>=10; sys_platform == 'darwin'",
 ]
 
 [project.optional-dependencies]

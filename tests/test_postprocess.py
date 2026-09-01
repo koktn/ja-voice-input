@@ -50,8 +50,7 @@ class TestPostProcessor:
         fake_resp = mock.Mock()
         fake_resp.json.return_value = {"message": {"content": " 整形済み "}}
         fake_resp.raise_for_status.return_value = None
-        with mock.patch("ja_voice_input.postprocess.requests.post",
-                        return_value=fake_resp) as post:
+        with mock.patch.object(p._session, "post", return_value=fake_resp) as post:
             assert p._llm_refine("生テキスト") == "整形済み"
         url = post.call_args.args[0]
         payload = post.call_args.kwargs["json"]
@@ -64,6 +63,23 @@ class TestPostProcessor:
         import requests
 
         p = make_processor()
-        with mock.patch("ja_voice_input.postprocess.requests.post",
-                        side_effect=requests.ConnectionError("refused")):
+        with mock.patch.object(p._session, "post",
+                               side_effect=requests.ConnectionError("refused")):
             assert p._llm_refine("テキスト") is None
+
+    def test_circuit_breaker_skips_repeated_failure(self):
+        import requests
+
+        p = make_processor()
+        with mock.patch.object(p._session, "post",
+                               side_effect=requests.ConnectionError("refused")) as post:
+            assert p._llm_refine("1回目") is None
+            assert p._llm_refine("2回目") is None
+        assert post.call_count == 1
+
+    def test_auto_mode_skips_llm_without_filler(self):
+        p = make_processor()
+        p.cfg.mode = "auto"
+        with mock.patch.object(p, "_llm_refine") as refine:
+            assert p.process("クロードコードで直して") == "Claude Codeで直して"
+        refine.assert_not_called()

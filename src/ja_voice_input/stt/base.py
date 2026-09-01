@@ -11,3 +11,6 @@ class SttBackend(ABC):
     @abstractmethod
     def transcribe(self, audio: np.ndarray, sample_rate: int) -> str:
         """float32 mono 波形をテキストに変換する。"""
+
+    def warmup(self) -> None:
+        """必要ならモデルをロードする。既に初期化済みの実装では何もしない。"""
